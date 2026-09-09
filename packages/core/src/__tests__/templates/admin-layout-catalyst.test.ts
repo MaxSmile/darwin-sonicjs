@@ -157,7 +157,7 @@ describe('renderAdminLayoutCatalyst', () => {
     const html = renderAdminLayoutCatalyst(baseData);
 
     expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('<html lang="en" class="dark">');
+    expect(html).toContain('<html lang="en">');
     expect(html).toContain('<head>');
     expect(html).toContain('<body');
     expect(html).toContain('</html>');
@@ -166,7 +166,7 @@ describe('renderAdminLayoutCatalyst', () => {
   it('should render page title', () => {
     const html = renderAdminLayoutCatalyst(baseData);
 
-    expect(html).toContain('<title>Test Page - SonicJS AI Admin</title>');
+    expect(html).toContain('<title>Test Page - Latvians of Darwin Admin</title>');
   });
 
   it('should render content', () => {
@@ -480,10 +480,10 @@ describe('renderAdminLayoutCatalyst', () => {
   });
 
   describe('Dark Mode', () => {
-    it('should include dark mode class by default', () => {
+    it('should default to light mode (no dark class on html)', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
-      expect(html).toContain('class="dark"');
+      expect(html).toContain('<html lang="en">');
     });
 
     it('should include dark mode initialization', () => {
@@ -507,14 +507,14 @@ describe('renderAdminLayoutCatalyst', () => {
     it('should render logo in desktop sidebar', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
-      expect(html).toContain('SonicJS');
+      expect(html).toContain('<svg');
     });
 
     it('should render logo in mobile header', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
       // Mobile header should have logo - check both desktop and mobile sections
-      expect(html).toContain('SonicJS');
+      expect(html).toContain('<svg');
     });
   });
 

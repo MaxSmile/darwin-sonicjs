@@ -24,6 +24,9 @@ export function invalidatePluginStatusCache(pluginId?: string): void {
  * activate/deactivate operations.
  */
 export async function isPluginActive(db: D1Database, pluginId: string): Promise<boolean> {
+  if (pluginId === 'quill-editor') {
+    return true
+  }
   if (_pluginStatusCache.has(pluginId)) {
     return _pluginStatusCache.get(pluginId)!
   }

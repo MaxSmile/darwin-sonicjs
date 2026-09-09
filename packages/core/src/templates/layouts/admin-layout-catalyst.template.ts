@@ -197,11 +197,11 @@ export function renderAdminLayoutCatalyst(
   data: AdminLayoutCatalystData
 ): string {
   return `<!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${data.title} - SonicJS AI Admin</title>
+  <title>${data.title} - Latvians of Darwin Admin</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
   <!-- Tailwind CSS -->
@@ -254,16 +254,16 @@ export function renderAdminLayoutCatalyst(
     }
 
     ::-webkit-scrollbar-track {
-      background: #27272a;
+      background: #f4f4f5;
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #52525b;
+      background: #d4d4d8;
       border-radius: 4px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #71717a;
+      background: #a1a1aa;
     }
 
     /* Smooth transitions */
@@ -386,7 +386,7 @@ export function renderAdminLayoutCatalyst(
           </svg>
         </button>
         <div class="ml-4 flex-1">
-          ${renderLogo({ size: "sm", showText: true, variant: "white", version: data.version, href: "/admin/content" })}
+          ${renderLogo({ size: "sm", showText: true, variant: "dark", version: data.version, href: "/admin/content" })}
         </div>
       </header>
 
@@ -503,9 +503,9 @@ export function renderAdminLayoutCatalyst(
       }, 5000);
     }
 
-    // Initialize dark mode
-    if (localStorage.getItem('darkMode') === 'false') {
-      document.documentElement.classList.remove('dark');
+    // Initialize dark mode (default light)
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.documentElement.classList.add('dark');
     }
 
     // Migration banner functions
@@ -705,7 +705,7 @@ function renderCatalystSidebar(
 
       <!-- Sidebar Header -->
       <div class="flex w-full flex-col border-b border-zinc-950/5 p-4 dark:border-white/5">
-        ${renderLogo({ size: "md", showText: true, variant: "white", version, href: "/admin/content" })}
+        ${renderLogo({ size: "md", showText: true, variant: "dark", version, href: "/admin/content" })}
         ${_branchLabel ? (() => { const col = branchColor(_branchLabel!); const short = _branchLabel!.split('/').pop() || _branchLabel!; return `<div class="mt-2 flex items-center justify-center"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${col.bg} ${col.text} max-w-full truncate" title="${_branchLabel}">${short}</span></div>`; })() : ""}
       </div>
 

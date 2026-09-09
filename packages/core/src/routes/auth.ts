@@ -900,7 +900,7 @@ authRoutes.get('/accept-invitation', async (c) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Accept Invitation - SonicJS AI</title>
+        <title>Accept Invitation - Latvians of Darwin</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
           body {
@@ -1233,7 +1233,7 @@ authRoutes.get('/reset-password', async (c) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Reset Password - SonicJS AI</title>
+        <title>Reset Password - Latvians of Darwin</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
           body {

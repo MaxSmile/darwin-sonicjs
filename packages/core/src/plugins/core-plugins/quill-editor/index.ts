@@ -144,7 +144,21 @@ export function getQuillInitScript(): string {
             theme: theme,
             placeholder: placeholder,
             modules: {
-              toolbar: toolbar
+              toolbar: {
+                container: toolbar,
+                handlers: {
+                  video: function() {
+                    const input = window.prompt('Paste a YouTube URL or video embed code:');
+                    if (!input) return;
+                    const ytRe = new RegExp('(?:youtu\\.be/|youtube\\.com/(?:embed/|v/|watch\\?v=|watch\\?.+&v=|shorts/))([\\w-]{11})');
+                    const match = input.match(ytRe);
+                    const embedUrl = match ? ('https://www.youtube-nocookie.com/embed/' + match[1]) : input;
+                    const range = this.quill.getSelection(true);
+                    this.quill.insertEmbed(range.index, 'video', embedUrl, 'user');
+                    this.quill.setSelection(range.index + 1, 0, 'silent');
+                  }
+                }
+              }
             },
             formats: [
               'header', 'bold', 'italic', 'underline', 'strike',
@@ -154,6 +168,22 @@ export function getQuillInitScript(): string {
               'link', 'image', 'video'
             ]
           });
+
+          // Auto-convert pasted bare YouTube links into embeds
+          if (quill.clipboard) {
+            quill.clipboard.addMatcher(Node.TEXT_NODE, function(node, delta) {
+              const text = node.data;
+              if (text) {
+                const clipRe = new RegExp('(?:https?:)?//(?:www\\.|m\\.)?(?:youtube\\.com/(?:watch\\?v=|embed/|shorts/)|youtu\\.be/)([\\w-]{11})');
+                const yt = text.trim().match(clipRe);
+                if (yt) {
+                  const Delta = Quill.import('delta');
+                  return new Delta().insert({ video: 'https://www.youtube-nocookie.com/embed/' + yt[1] });
+                }
+              }
+              return delta;
+            });
+          }
 
           // Set editor height
           const editorElement = editorDiv.querySelector('.ql-editor');

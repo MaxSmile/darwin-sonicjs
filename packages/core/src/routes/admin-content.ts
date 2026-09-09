@@ -837,27 +837,27 @@ adminContentRoutes.get('/new', async (c) => {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Select Collection - SonicJS AI Admin</title>
+          <title>Select Collection - Latvians of Darwin Admin</title>
           <script src="https://cdn.tailwindcss.com"></script>
         </head>
-        <body class="bg-gray-900 text-white">
+        <body class="bg-zinc-50 text-zinc-900">
           <div class="min-h-screen flex items-center justify-center">
             <div class="max-w-2xl w-full mx-auto p-8">
-              <h1 class="text-3xl font-bold mb-8 text-center">Create New Content</h1>
-              <p class="text-gray-300 text-center mb-8">Select a collection to create content in:</p>
+              <h1 class="text-3xl font-bold mb-8 text-center text-zinc-950">Create New Content</h1>
+              <p class="text-zinc-600 text-center mb-8">Select a collection to create content in:</p>
               
               <div class="grid gap-4">
                 ${collections.map(collection => `
                   <a href="/admin/content/new?collection=${collection.id}" 
-                     class="block p-6 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
-                    <h3 class="text-xl font-semibold mb-2">${collection.display_name}</h3>
-                    <p class="text-gray-400">${collection.description || 'No description'}</p>
+                     class="block p-6 bg-white rounded-lg hover:bg-zinc-100 transition-colors border border-zinc-200 shadow-sm">
+                    <h3 class="text-xl font-semibold mb-2 text-zinc-900">${collection.display_name}</h3>
+                    <p class="text-zinc-500">${collection.description || 'No description'}</p>
                   </a>
                 `).join('')}
               </div>
               
               <div class="mt-8 text-center">
-                <a href="/admin/content" class="text-blue-400 hover:text-blue-300">← Back to Content List</a>
+                <a href="/admin/content" class="text-red-800 hover:text-red-700 font-medium">← Back to Content List</a>
               </div>
             </div>
           </div>
