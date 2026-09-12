@@ -386,7 +386,7 @@ export function renderAdminLayoutCatalyst(
           </svg>
         </button>
         <div class="ml-4 flex-1">
-          ${renderLogo({ size: "sm", showText: true, variant: "dark", version: data.version, href: "/admin/content" })}
+          ${renderLogo({ size: "sm", showText: true, variant: "dark", showVersion: false, href: "/admin/content" })}
         </div>
       </header>
 
@@ -705,7 +705,7 @@ function renderCatalystSidebar(
 
       <!-- Sidebar Header -->
       <div class="flex w-full flex-col border-b border-zinc-950/5 p-4 dark:border-white/5">
-        ${renderLogo({ size: "md", showText: true, variant: "dark", version, href: "/admin/content" })}
+        ${renderLogo({ size: "md", showText: true, variant: "dark", showVersion: false, href: "/admin/content" })}
         ${_branchLabel ? (() => { const col = branchColor(_branchLabel!); const short = _branchLabel!.split('/').pop() || _branchLabel!; return `<div class="mt-2 flex items-center justify-center"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${col.bg} ${col.text} max-w-full truncate" title="${_branchLabel}">${short}</span></div>`; })() : ""}
       </div>
 
