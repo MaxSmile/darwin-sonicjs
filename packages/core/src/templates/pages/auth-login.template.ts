@@ -15,7 +15,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Login - Latvians of Darwin</title>
-      <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+      <link rel="icon" type="image/x-icon" href="/files/uploads/40c99b4d978d3e3c1f4c8.ico">
       <script src="https://unpkg.com/htmx.org@2.0.3"></script>
       <script src="https://cdn.tailwindcss.com"></script>
       <script>
@@ -66,14 +66,8 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
       <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
         <!-- Logo Section -->
         <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-          <div class="mx-auto w-64 mb-6">
-            <svg class="w-full h-auto lod-logo" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <g transform="translate(250, 110)" text-anchor="middle">
-                <text x="0" y="-15" class="text-top">Latvians Of</text>
-                <line x1="-60" y1="12" x2="60" y2="12" class="accent-line" opacity="0.3" />
-                <text x="0" y="72" class="text-bottom">Darwin</text>
-              </g>
-            </svg>
+          <div class="mx-auto mb-6 flex w-64 justify-center">
+            <img class="h-40 w-auto max-w-full object-contain" src="/files/uploads/e9cd9febfcf6d193954bc.png" alt="Latvian Association of Darwin" />
           </div>
           <h2 class="mt-4 text-xl font-medium text-zinc-900">Welcome Back</h2>
           <p class="mt-2 text-sm text-zinc-500">Sign in to your account to continue</p>
