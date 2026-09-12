@@ -9,8 +9,8 @@ export interface LogoData {
 }
 
 const sizeClasses = {
-  sm: 'h-6 w-auto',
-  md: 'h-8 w-auto',
+  sm: 'h-10 w-auto max-w-[14rem] object-contain',
+  md: 'h-14 w-auto max-w-[18rem] object-contain',
   lg: 'h-12 w-auto',
   xl: 'h-16 w-auto'
 }
@@ -29,15 +29,9 @@ export function renderLogo(data: LogoData = {}): string {
 
   const sizeClass = sizeClasses[size]
 
-  // Custom Latvians of Darwin logo
+  // Association logo served by the website's public media route.
   const logoSvg = `
-    <svg class="${sizeClass} ${className}" viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-      <g transform="translate(200, 90)" text-anchor="middle">
-        <text x="0" y="-30" font-size="48" font-weight="700" fill="${variant === 'white' ? '#ffffff' : variant === 'dark' ? '#1f2937' : 'currentColor'}" letter-spacing="2">Latvians Of</text>
-        <line x1="-80" y1="5" x2="80" y2="5" stroke="${variant === 'white' ? '#ffffff' : variant === 'dark' ? '#1f2937' : 'currentColor'}" stroke-width="2" opacity="0.3"></line>
-        <text x="0" y="50" font-size="48" font-weight="700" fill="${variant === 'white' ? '#ffffff' : variant === 'dark' ? '#1f2937' : 'currentColor'}" letter-spacing="2">Darwin</text>
-      </g>
-    </svg>
+    <img class="${sizeClass} ${className}" src="/files/uploads/e9cd9febfcf6d193954bc.png" alt="Latvian Association of Darwin" />
   `
 
   const versionBadge = showVersion && version ? `
