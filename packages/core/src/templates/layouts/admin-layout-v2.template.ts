@@ -37,7 +37,7 @@ export function adminLayoutV2(data: AdminLayoutData): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${data.title} - SonicJS AI Admin</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+      <link rel="icon" type="image/x-icon" href="/files/uploads/40c99b4d978d3e3c1f4c8.ico">
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
