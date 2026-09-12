@@ -222,21 +222,45 @@ export function renderStatsCards(stats: DashboardStats): string {
     },
   ];
 
-  const cardColors = ['text-cyan-400', 'text-lime-400', 'text-pink-400', 'text-purple-400'];
+  // Per-card accent: [value color, top-border, bg gradient light, bg gradient dark, icon bg]
+  const cardAccents = [
+    {
+      valueColor: 'text-cyan-600 dark:text-cyan-400',
+      border: 'border-t-2 border-cyan-500',
+      bg: 'bg-cyan-50/70 dark:bg-cyan-950/30',
+    },
+    {
+      valueColor: 'text-lime-700 dark:text-lime-400',
+      border: 'border-t-2 border-lime-500',
+      bg: 'bg-lime-50/70 dark:bg-lime-950/30',
+    },
+    {
+      valueColor: 'text-pink-600 dark:text-pink-400',
+      border: 'border-t-2 border-pink-500',
+      bg: 'bg-pink-50/70 dark:bg-pink-950/30',
+    },
+    {
+      valueColor: 'text-purple-600 dark:text-purple-400',
+      border: 'border-t-2 border-purple-500',
+      bg: 'bg-purple-50/70 dark:bg-purple-950/30',
+    },
+  ];
 
   return `
     <div>
       <h3 class="text-base font-semibold text-zinc-950 dark:text-white">Last 30 days</h3>
-      <dl class="mt-5 grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-zinc-800/75 dark:bg-zinc-800/75 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-4 md:divide-x md:divide-y-0">
-        ${cards.map((card, index) => `
-          <div class="px-4 py-5 sm:p-6">
-            <dt class="text-base font-normal text-zinc-700 dark:text-zinc-100">${card.title}</dt>
-            <dd class="mt-1 flex items-baseline justify-between md:block lg:flex">
-              <div class="flex items-baseline text-2xl font-semibold ${cardColors[index]}">
+      <dl class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
+        ${cards.map((card, index) => {
+          const accent = cardAccents[index];
+          return `
+          <div class="${accent.border} ${accent.bg} rounded-lg px-4 py-5 sm:p-6 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 shadow-sm">
+            <dt class="text-sm font-medium text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">${card.title}</dt>
+            <dd class="mt-3 flex items-baseline justify-between">
+              <div class="text-3xl font-bold ${accent.valueColor}">
                 ${card.value}
               </div>
-              <div class="inline-flex items-baseline rounded-full ${card.isPositive ? 'bg-lime-400/10 text-lime-600 dark:text-lime-400' : 'bg-pink-400/10 text-pink-600 dark:text-pink-400'} px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0">
-                <svg viewBox="0 0 20 20" fill="currentColor" class="-ml-1 mr-0.5 size-5 shrink-0 self-center">
+              <div class="inline-flex items-baseline rounded-full ${card.isPositive ? 'bg-lime-400/15 text-lime-600 dark:text-lime-400' : 'bg-pink-400/15 text-pink-600 dark:text-pink-400'} px-2.5 py-0.5 text-sm font-semibold">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="-ml-1 mr-0.5 size-4 shrink-0 self-center">
                   ${card.isPositive
                     ? '<path d="M10 17a.75.75 0 0 1-.75-.75V5.612L5.29 9.77a.75.75 0 0 1-1.08-1.04l5.25-5.5a.75.75 0 0 1 1.08 0l5.25 5.5a.75.75 0 1 1-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0 1 10 17Z" clip-rule="evenodd" fill-rule="evenodd" />'
                     : '<path d="M10 3a.75.75 0 0 1 .75.75v10.638l3.96-4.158a.75.75 0 1 1 1.08 1.04l-5.25 5.5a.75.75 0 0 1-1.08 0l-5.25-5.5a.75.75 0 1 1 1.08-1.04l3.96 4.158V3.75A.75.75 0 0 1 10 3Z" clip-rule="evenodd" fill-rule="evenodd" />'
@@ -247,7 +271,7 @@ export function renderStatsCards(stats: DashboardStats): string {
               </div>
             </dd>
           </div>
-        `).join('')}
+        `;}).join('')}
       </dl>
     </div>
   `;
@@ -257,7 +281,7 @@ function renderStatsCardsSkeleton(): string {
   return `
     <div>
       <div class="h-6 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-5"></div>
-      <div class="grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-zinc-800/75 dark:bg-zinc-800/75 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-4 md:divide-x md:divide-y-0">
+      <div class="grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-white dark:bg-zinc-900 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-4 md:divide-x md:divide-y-0">
         ${Array(4)
           .fill(0)
           .map(
