@@ -27,6 +27,18 @@ function rowToDocumentType(row: DocumentTypeRow): DocumentType {
   }
 }
 
+function canonicalJson(obj: unknown): string {
+  if (obj === null || typeof obj !== 'object') {
+    return JSON.stringify(obj)
+  }
+  if (Array.isArray(obj)) {
+    return '[' + obj.map(canonicalJson).join(',') + ']'
+  }
+  const keys = Object.keys(obj as Record<string, unknown>).sort()
+  const entries = keys.map((k) => JSON.stringify(k) + ':' + canonicalJson((obj as Record<string, unknown>)[k]))
+  return '{' + entries.join(',') + '}'
+}
+
 export class DocumentTypeRegistry {
   private cache = new Map<string, DocumentType>()
 
@@ -48,16 +60,24 @@ export class DocumentTypeRegistry {
     // A z.ZodSchema is not JSON-serializable, so persist a stable serializable shape derived from
     // the type's queryable fields + settings. This is what schemaChanged compares, so schema_version
     // bumps whenever a type's filterable shape changes (and is stamped onto documents.type_version).
-    const schemaJson = JSON.stringify({ queryableFields: def.queryableFields ?? [], settings: def.settings ?? {} })
+    const newSchemaObj = { queryableFields: def.queryableFields ?? [], settings: def.settings ?? {} }
+    const schemaJson = JSON.stringify(newSchemaObj)
     const queryableJson = JSON.stringify(def.queryableFields ?? [])
     const settingsJson = JSON.stringify(def.settings ?? {})
 
     if (existing) {
-      const schemaChanged = schemaJson !== JSON.stringify(existing.schema)
-      // Fast path: nothing changed — skip UPDATE + DDL + refetch (saves ~4 D1 round-trips per type)
-      if (!schemaChanged) return existing
+      const schemaChanged = canonicalJson(newSchemaObj) !== canonicalJson(existing.schema)
+      const metaChanged =
+        existing.displayName !== def.displayName ||
+        (existing.description ?? null) !== (def.description ?? null) ||
+        (existing.pluginId ?? null) !== (def.pluginId ?? null) ||
+        existing.isAuth !== (def.isAuth ? true : false) ||
+        !existing.isActive
 
-      const newVersion = existing.schemaVersion + 1
+      // Fast path: nothing changed — skip UPDATE + DDL + refetch (saves ~4 D1 round-trips per type)
+      if (!schemaChanged && !metaChanged) return existing
+
+      const newVersion = schemaChanged ? existing.schemaVersion + 1 : existing.schemaVersion
 
       await this.db
         .prepare(
@@ -88,8 +108,10 @@ export class DocumentTypeRegistry {
         )
         .run()
 
-      // Auto-DDL: ensure VIRTUAL generated columns + indexes for scalar fields.
-      await ensureScalarSchema(this.db, def.id, def.queryableFields ?? [])
+      // Auto-DDL: ensure VIRTUAL generated columns + indexes for scalar fields only if schema changed.
+      if (schemaChanged) {
+        await ensureScalarSchema(this.db, def.id, def.queryableFields ?? [])
+      }
 
       const updated = await this.findById(def.id)
       this.cache.set(def.id, updated!)

@@ -246,12 +246,18 @@ export function renderStatsCards(stats: DashboardStats): string {
     },
   ];
 
+  const defaultAccent = {
+    valueColor: 'text-cyan-600 dark:text-cyan-400',
+    border: 'border-t-2 border-cyan-500',
+    bg: 'bg-cyan-50/70 dark:bg-cyan-950/30',
+  };
+
   return `
     <div>
       <h3 class="text-base font-semibold text-zinc-950 dark:text-white">Last 30 days</h3>
       <dl class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
         ${cards.map((card, index) => {
-          const accent = cardAccents[index];
+          const accent = cardAccents[index] ?? defaultAccent;
           return `
           <div class="${accent.border} ${accent.bg} rounded-lg px-4 py-5 sm:p-6 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 shadow-sm">
             <dt class="text-sm font-medium text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">${card.title}</dt>

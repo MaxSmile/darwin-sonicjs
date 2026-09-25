@@ -155,18 +155,6 @@ export function bootstrapMiddleware(config: SonicJSConfig = {}, allPlugins?: Arr
               const configs = await loadCollectionConfigs()
               getCollectionRegistry().register(configs)
             } catch { /* registry optional in fast-path */ }
-            // Sync document types to D1 even on KV fast-path — idempotent no-ops when
-            // nothing changed, but ensures newly added code collections reach D1 without
-            // requiring a version bump or full cold-start bootstrap.
-            await bootstrapDocumentTypes(c.env.DB).catch((e) =>
-              console.error("[Bootstrap] KV fast-path: error syncing document types:", e)
-            )
-            await autoRegisterCollectionDocumentTypes(c.env.DB).catch((e) =>
-              console.error("[Bootstrap] KV fast-path: error auto-registering collection types:", e)
-            )
-            await bootstrapDefaultContent(c.env.DB).catch((e) =>
-              console.error("[Bootstrap] KV fast-path: error seeding default content:", e)
-            )
             bootstrapComplete = true
             return next()
           }

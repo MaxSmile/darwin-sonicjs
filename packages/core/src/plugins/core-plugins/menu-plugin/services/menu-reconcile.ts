@@ -21,14 +21,22 @@ async function upsertPluginRow(
 
   const existing = await db
     .prepare(
-      `SELECT id FROM documents
+      `SELECT id, visible, json_extract(data, '$.url') as url, json_extract(data, '$.pluginId') as pluginId FROM documents
        WHERE slug = ? AND type_id = 'menu_item' AND tenant_id = 'default'
          AND is_current_draft = 1 AND deleted_at IS NULL`,
     )
     .bind(slug)
-    .first<{ id: string }>()
+    .first<{ id: string; visible: number; url: string | null; pluginId: string | null }>()
 
   if (existing) {
+    const isVisibleNum = visible ? 1 : 0
+    if (
+      existing.visible === isVisibleNum &&
+      existing.url === entry.url &&
+      existing.pluginId === entry.pluginId
+    ) {
+      return
+    }
     await db
       .prepare(
         `UPDATE documents
@@ -37,7 +45,7 @@ async function upsertPluginRow(
              updated_at = ?
          WHERE id = ? AND tenant_id = 'default'`,
       )
-      .bind(entry.url, entry.pluginId, visible ? 1 : 0, visible ? 1 : 0, now, existing.id)
+      .bind(entry.url, entry.pluginId, isVisibleNum, isVisibleNum, now, existing.id)
       .run()
     return
   }
@@ -89,6 +97,7 @@ async function deactivateStalePluginRows(
       `SELECT id, data FROM documents
        WHERE type_id = 'menu_item' AND tenant_id = 'default'
          AND is_current_draft = 1 AND deleted_at IS NULL
+         AND visible = 1
          AND json_extract(data, '$.source') = 'plugin'`,
     )
     .all<{ id: string; data: string }>()

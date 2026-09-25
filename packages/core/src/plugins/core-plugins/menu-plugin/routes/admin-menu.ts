@@ -33,7 +33,33 @@ adminMenuRoutes.use('*', requireRole(['admin']))
 adminMenuRoutes.get('/', async (c) => {
   const db = c.env.DB
   const user = c.get('user')
-  const items = await listMenuItems(db)
+  let items = await listMenuItems(db)
+  if (items.length === 0) {
+    try {
+      const { SYSTEM_MENU_ITEMS } = await import('../services/menu-defaults')
+      const { upsertSystemItem } = await import('../services/menu-repository')
+      const { reconcileMenuFromPlugins } = await import('../services/menu-reconcile')
+      for (const item of SYSTEM_MENU_ITEMS) {
+        await upsertSystemItem(db, item.id, {
+          label: item.label,
+          url: item.url,
+          icon: item.icon,
+          target: item.target,
+          isExternal: item.isExternal,
+          visible: item.visible,
+          parent: item.parent,
+          source: item.source,
+          pluginId: item.pluginId,
+          permissions: [...item.permissions],
+          lockedFields: [...item.lockedFields],
+        }, item.sortOrder)
+      }
+      await reconcileMenuFromPlugins(db)
+      items = await listMenuItems(db)
+    } catch {
+      // Non-fatal
+    }
+  }
   const tree = buildSidebarTree(items)
   const pluginIds = [...new Set(items.filter(i => i.pluginId).map(i => i.pluginId as string))]
   const pluginStatuses = await fetchPluginStatuses(db, pluginIds)
