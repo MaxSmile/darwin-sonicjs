@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Check if E2E tests should run (set RUN_E2E_ON_PUSH=true to enable)
 RUN_E2E=${RUN_E2E_ON_PUSH:-false}
 
