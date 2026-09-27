@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { getContentTitle } from '../../routes/admin-content'
 import { buildSchemaFieldOptions, resolveSchemaFieldType } from '../../routes/admin-content-field-types'
 
 describe('admin content schema field type resolution', () => {
@@ -68,5 +69,12 @@ describe('admin content schema field type resolution', () => {
         { value: 'published', label: 'Published' },
       ],
     })
+  })
+
+  it('derives document titles from bilingual collection fields', () => {
+    expect(getContentTitle({ title_en: 'Crocodile Dundee Connection', title_lv: 'Krokodila Dandija saikne' })).toBe(
+      'Crocodile Dundee Connection',
+    )
+    expect(getContentTitle({ title: '', title_en: 'Latvian story', slug: 'latvian-story' })).toBe('Latvian story')
   })
 })

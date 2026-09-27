@@ -190,6 +190,32 @@ adminContentRoutes.use('*', requireAuth())
 async function getCollectionFields(db: D1Database, collectionId: string) {
   console.log(`[getCollectionFields] Loading fields for collection: ${collectionId}`)
 
+  // Code-defined collections are the runtime source of truth. A document_types
+  // row can contain an older generated schema (for example, a legacy required
+  // `title` field) after the application collection has moved to localized
+  // fields such as `title_en` and `title_lv`. Rendering and validating the stale
+  // database schema makes the form request a field that is not visible.
+  const codeCollections = await loadCollectionConfigs()
+  const codeCollection = codeCollections.find((collection: any) =>
+    collection.name === collectionId || collection.slug === collectionId,
+  )
+
+  if (codeCollection?.schema?.properties) {
+    console.log(`[getCollectionFields] Using code collection schema: ${collectionId}`)
+    const schema = codeCollection.schema
+    let fieldOrder = 0
+    return Object.entries(schema.properties).map(([fieldName, fieldConfig]: [string, any]) => ({
+      id: `schema-${fieldName}`,
+      field_name: fieldName,
+      field_type: resolveSchemaFieldType(fieldConfig),
+      field_label: fieldConfig.title || fieldName,
+      field_options: buildSchemaFieldOptions(fieldConfig),
+      field_order: fieldOrder++,
+      is_required: fieldConfig.required === true || (schema.required && schema.required.includes(fieldName)),
+      is_searchable: false,
+    }))
+  }
+
   // First, check if document type has a schema in database
   const collectionStmt = db.prepare('SELECT schema, queryable_fields FROM document_types WHERE id = ?')
   const collectionRow = await collectionStmt.bind(collectionId).first() as any
@@ -265,10 +291,7 @@ async function getCollectionFields(db: D1Database, collectionId: string) {
   console.log(`[getCollectionFields] Not in database, checking code collections`)
 
   // Check code-defined collections (don't cache these since they can change)
-  const codeCollections = await loadCollectionConfigs()
   console.log(`[getCollectionFields] Found ${codeCollections.length} code collections`)
-
-  const codeCollection = codeCollections.find((c: any) => c.name === collectionId)
 
   if (codeCollection && codeCollection.schema) {
     console.log(`[getCollectionFields] Found code collection: ${collectionId}`)
@@ -431,6 +454,26 @@ function reqTenant(c: any): string {
 function slugify(s?: string | null): string | null {
   if (!s) return null
   return s.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '') || null
+}
+
+export function firstNonEmptyString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value !== 'string') continue
+    const trimmed = value.trim()
+    if (trimmed) return trimmed
+  }
+  return null
+}
+
+export function getContentTitle(data: Record<string, any>): string | null {
+  return firstNonEmptyString(
+    data.title,
+    data.title_en,
+    data.titleEn,
+    data.name,
+    data.heading,
+    data.slug,
+  )
 }
 
 // Content list (main page)
@@ -1210,23 +1253,17 @@ adminContentRoutes.post('/', async (c) => {
     // Extract and validate field data
     const { data, errors } = extractFieldData(fields, formData)
 
-    // Defensive: title is always required regardless of schema
-    const titleVal = (formData.get('title') as string || '').trim()
-    if (!titleVal && !errors['title']) {
-      errors['title'] = ['Title is required']
-    }
-
     // Check for validation errors
     if (Object.keys(errors).length > 0) {
       if (c.req.header('HX-Request') === 'true') {
         // Return bare error alert — HTMX swaps innerHTML into #form-messages (hx-target on the form).
         // Avoids HX-Retarget/outerHTML nesting issues with HTMX 2.x.
-        return c.html(html`<div class="p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 text-sm" role="alert">
-          <strong>Please fix the validation errors below.</strong>
-          <ul class="mt-1 list-disc list-inside text-xs">
-            ${Object.entries(errors).map(([field, msgs]) =>
-              `<li>${field}: ${(msgs as string[]).join(', ')}</li>`
-            ).join('')}
+        return c.html(html`<div class="p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-300 dark:border-red-700 text-red-900 dark:text-red-100 text-sm shadow-sm" role="alert">
+          <strong class="font-semibold">Please fix the validation errors below.</strong>
+          <ul class="mt-2 list-disc list-inside text-sm space-y-1">
+            ${Object.entries(errors).map(([field, msgs]) => html`
+              <li class="text-red-900 dark:text-red-100">${field}: ${(msgs as string[]).join(', ')}</li>
+            `)}
           </ul>
         </div>`)
       }
@@ -1248,7 +1285,9 @@ adminContentRoutes.post('/', async (c) => {
     }
 
     // Generate slug if not provided
-    let slug = data.slug || data.title
+    const contentTitle = getContentTitle(data)
+
+    let slug = data.slug || contentTitle
     if (slug) {
       slug = slug.toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
@@ -1274,7 +1313,7 @@ adminContentRoutes.post('/', async (c) => {
       const svc = makeDocService(db, createDocType, tenantId)
       const doc = await svc.create(createDocumentSchema.parse({
         typeId: createDocType.id, tenantId, locale: 'default',
-        title: data.title || slug || 'Untitled', slug: slug || undefined,
+        title: contentTitle || 'Untitled', slug: slug || undefined,
         data, publishOnCreate: status === 'published',
       }), user?.userId)
       const cache = getCacheService(CACHE_CONFIGS.content!)
@@ -1420,12 +1459,13 @@ adminContentRoutes.put('/:id', async (c) => {
           }
           return c.html(renderContentFormPage(errFormData))
         }
-        const slug = slugify(data.slug || data.title)
+        const contentTitle = getContentTitle(data)
+        const slug = slugify(data.slug || contentTitle)
         let status = formData.get('status') as string || 'draft'
         if (action === 'save_and_publish') status = 'published'
 
         const svc = makeDocService(db, docType, tenantId)
-        const newDraft = await svc.saveDraft(id, { title: data.title ?? null, slug, data }, user?.userId)
+        const newDraft = await svc.saveDraft(id, { title: contentTitle, slug, data }, user?.userId)
         // saveDraft always returns an unpublished draft; sync against the root's published row.
         const pub = await db.prepare("SELECT id FROM documents WHERE root_id = ? AND is_published = 1 AND tenant_id = ?").bind(id, tenantId).first() as any
         if (status === 'published') await svc.publish(newDraft.id, user?.userId)

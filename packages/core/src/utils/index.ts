@@ -46,3 +46,9 @@ export {
 } from './telemetry-config'
 
 export { getBlocksFieldConfig, parseBlocksValue } from './blocks'
+export {
+  convertImageFileToWebp,
+  convertImageFilesToWebp,
+  isWebpConvertibleImage,
+  replaceExtension
+} from './media-webp'

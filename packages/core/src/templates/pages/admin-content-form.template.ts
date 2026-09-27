@@ -85,10 +85,19 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
     ? `/admin/content?${data.referrerParams}`
     : `/admin/content?collection=${data.collection.id}`
 
-  // Group fields by category
-  const coreFields = data.fields.filter(f => ['title', 'slug', 'content'].includes(f.field_name))
-  const contentFields = data.fields.filter(f => !['title', 'slug', 'content'].includes(f.field_name) && !f.field_name.startsWith('meta_'))
-  const metaFields = data.fields.filter(f => f.field_name.startsWith('meta_'))
+  // Group fields by category to match the requested admin layout
+  const basicFields = data.fields.filter(f =>
+    ['title', 'slug', 'content', 'template', 'sortOrder', 'heroImage'].includes(f.field_name),
+  )
+  const contentFields = data.fields.filter(f =>
+    !['title', 'slug', 'content', 'template', 'sortOrder', 'heroImage'].includes(f.field_name) &&
+    !f.field_name.startsWith('meta_') &&
+    !f.field_name.startsWith('cta'),
+  )
+  const seoFields = data.fields.filter(f =>
+    f.field_name.startsWith('meta_') || f.field_name.startsWith('cta') ||
+    ['ctaLabel_en', 'ctaLabel_lv', 'ctaHref', 'metaTitle_en', 'metaTitle_lv', 'metaDescription_en', 'metaDescription_lv'].includes(f.field_name),
+  )
 
   // Helper function to get field value - title and slug are stored as columns, others in data JSON
   const getFieldValue = (fieldName: string) => {
@@ -106,14 +115,14 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
   }
 
   // Render field groups
-  const coreFieldsHTML = coreFields
+  const basicFieldsHTML = basicFields
     .sort((a, b) => a.field_order - b.field_order)
     .map(field => renderDynamicField(field, {
       value: getFieldValue(field.field_name),
       errors: data.validationErrors?.[field.field_name] || [],
       pluginStatuses,
       collectionId: data.collection.id,
-      contentId: data.id // Pass content ID when editing
+      contentId: data.id
     }))
 
   const contentFieldsHTML = contentFields
@@ -126,7 +135,7 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
       contentId: data.id
     }))
 
-  const metaFieldsHTML = metaFields
+  const seoFieldsHTML = seoFields
     .sort((a, b) => a.field_order - b.field_order)
     .map(field => renderDynamicField(field, {
       value: getFieldValue(field.field_name),
@@ -175,11 +184,6 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
 
         <!-- Form Content -->
         <div class="px-6 py-6">
-          <div id="form-messages">
-            ${data.error ? renderAlert({ type: 'error', message: data.error, dismissible: true }) : ''}
-            ${data.success ? renderAlert({ type: 'success', message: data.success, dismissible: true }) : ''}
-          </div>
-
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Content Form -->
         <div class="lg:col-span-2">
@@ -197,13 +201,13 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
             ${data.referrerParams ? `<input type="hidden" name="referrer_params" value="${data.referrerParams}">` : ''}
 
             <!-- Core Fields -->
-            ${renderFieldGroup('Basic Information', coreFieldsHTML)}
+            ${renderFieldGroup('Basic Information', basicFieldsHTML)}
 
             <!-- Content Fields -->
             ${contentFields.length > 0 ? renderFieldGroup('Content Details', contentFieldsHTML) : ''}
 
-            <!-- SEO & Meta Fields -->
-            ${metaFields.length > 0 ? renderFieldGroup('SEO & Metadata', metaFieldsHTML, true) : ''}
+            <!-- SEO Settings -->
+            ${seoFields.length > 0 ? renderFieldGroup('SEO Settings', seoFieldsHTML) : ''}
           </form>
         </div>
 
@@ -368,6 +372,11 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
           </div>
         </div>
 
+        <div id="form-messages" class="mt-6">
+          ${data.error ? renderAlert({ type: 'error', message: data.error, dismissible: true }) : ''}
+          ${data.success ? renderAlert({ type: 'success', message: data.success, dismissible: true }) : ''}
+        </div>
+
         <!-- Action Buttons -->
         <div class="mt-6 pt-6 border-t border-zinc-950/5 dark:border-white/10 flex items-center justify-between">
           <a href="${backUrl}" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
@@ -377,13 +386,13 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
             Cancel
           </a>
 
-          <div class="flex items-center gap-x-3">
+          <div class="flex flex-1 items-center justify-end gap-x-3">
             <button
               type="submit"
               form="content-form"
               name="action"
               value="save"
-              class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm"
+              class="inline-flex flex-1 min-w-[120px] items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm"
             >
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
@@ -396,7 +405,7 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
               form="content-form"
               name="action"
               value="save_and_close"
-              class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
+              class="inline-flex flex-[1.5] min-w-[180px] items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
             >
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -917,6 +926,118 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
         actionsDiv.appendChild(removeBtn);
       }
 
+      async function convertMediaPickerImageToWebp(file) {
+        if (!file || !file.type || !file.type.startsWith('image/') || file.type.includes('svg') || file.type === 'image/webp') {
+          return file;
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+
+        try {
+          const image = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('Failed to load image for conversion'));
+            img.src = objectUrl;
+          });
+
+          const canvas = document.createElement('canvas');
+          const width = Math.max(1, Math.round(image.naturalWidth || image.width));
+          const height = Math.max(1, Math.round(image.naturalHeight || image.height));
+          canvas.width = width;
+          canvas.height = height;
+
+          const context = canvas.getContext('2d');
+          if (!context) {
+            return file;
+          }
+
+          context.clearRect(0, 0, width, height);
+          context.drawImage(image, 0, 0, width, height);
+
+          const convertedBlob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, 'image/webp', 0.82);
+          });
+
+          if (!convertedBlob) {
+            return file;
+          }
+
+          const nextName = file.name.includes('.')
+            ? file.name.replace(/\.[^/.]+$/, '.webp')
+            : file.name + '.webp';
+
+          return new File([convertedBlob], nextName, {
+            type: 'image/webp',
+            lastModified: Date.now(),
+          });
+        } catch (error) {
+          console.warn('Media picker WebP conversion failed, using original file instead:', error);
+          return file;
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+      }
+
+      function triggerMediaUploadPicker() {
+        document.getElementById('media-upload-input')?.click();
+      }
+
+      async function uploadSelectedMediaFiles(files) {
+        const selectedFiles = Array.from(files || []);
+        if (selectedFiles.length === 0) {
+          return;
+        }
+
+        const statusEl = document.getElementById('media-picker-upload-status');
+        if (statusEl) {
+          statusEl.textContent = 'Uploading...';
+          statusEl.classList.remove('hidden');
+        }
+
+        try {
+          const body = new FormData();
+          const convertedFiles = await Promise.all(
+            selectedFiles.map(async (file) => convertMediaPickerImageToWebp(file))
+          );
+
+          convertedFiles.forEach((file) => {
+            body.append('files', file);
+          });
+          body.append('folder', 'uploads');
+
+          const response = await fetch('/api/media/upload-multiple', {
+            method: 'POST',
+            body,
+          });
+
+          const result = await response.json();
+          if (!response.ok || !result?.success) {
+            throw new Error(result?.error || 'Upload failed');
+          }
+
+          if (statusEl) {
+            const uploadedCount = Number(result?.summary?.successful ?? convertedFiles.length);
+            statusEl.textContent = uploadedCount + ' file(s) uploaded successfully.';
+          }
+
+          const uploader = document.getElementById('media-upload-input');
+          if (uploader) {
+            uploader.value = '';
+          }
+
+          const container = document.getElementById('media-grid-container');
+          if (container && window.htmx) {
+            htmx.ajax('GET', '/admin/media/selector?t=' + Date.now(), '#media-grid-container');
+          }
+        } catch (error) {
+          console.error('Media upload from picker failed:', error);
+          if (statusEl) {
+            statusEl.textContent = error instanceof Error ? error.message : 'Upload failed';
+          }
+        }
+      }
+
       function openMediaSelector(fieldId) {
         const existingModal = getActiveMediaModal();
         if (existingModal) {
@@ -934,7 +1055,17 @@ export function renderContentFormPage(data: ContentFormData, opts?: { partialOnl
         modal.dataset.originalValue = originalValue;
         modal.innerHTML = \`
           <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h3 class="text-lg font-semibold text-zinc-950 dark:text-white mb-4">Select Media</h3>
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Select Media</h3>
+              <button
+                type="button"
+                onclick="triggerMediaUploadPicker()"
+                class="rounded-lg bg-zinc-950 dark:bg-white px-3 py-2 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors">
+                Upload Media
+              </button>
+            </div>
+            <input id="media-upload-input" type="file" multiple accept="image/*,application/pdf,text/plain" class="hidden" onchange="uploadSelectedMediaFiles(this.files)" />
+            <div id="media-picker-upload-status" class="hidden mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"></div>
             <div id="media-grid-container" hx-get="/admin/media/selector" hx-trigger="load"></div>
             <div class="mt-4 flex justify-end space-x-2">
               <button

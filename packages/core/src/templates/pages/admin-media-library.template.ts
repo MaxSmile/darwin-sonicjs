@@ -872,8 +872,75 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
         handleFileSelect(files);
       }
       
-      function handleFileSelect(files) {
-        dragDropFiles = Array.from(files);
+      async function convertImageFileToWebp(file) {
+        if (!file || !file.type || !file.type.startsWith('image/') || file.type.includes('svg') || file.type === 'image/webp') {
+          return file;
+        }
+
+        if (typeof document === 'undefined' || typeof window === 'undefined' || !window.HTMLCanvasElement || !window.Image) {
+          return file;
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+
+        try {
+          const image = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('Failed to load image for conversion'));
+            img.src = objectUrl;
+          });
+
+          const canvas = document.createElement('canvas');
+          const width = Math.max(1, Math.round(image.naturalWidth || image.width));
+          const height = Math.max(1, Math.round(image.naturalHeight || image.height));
+          canvas.width = width;
+          canvas.height = height;
+
+          const context = canvas.getContext('2d');
+          if (!context) {
+            return file;
+          }
+
+          context.clearRect(0, 0, width, height);
+          context.drawImage(image, 0, 0, width, height);
+
+          const blob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, 'image/webp', 0.82);
+          });
+
+          if (!blob) {
+            return file;
+          }
+
+          const fileName = file.name.includes('.')
+            ? file.name.replace(/\.[^/.]+$/, '.webp')
+            : file.name + '.webp';
+
+          return new File([blob], fileName, {
+            type: 'image/webp',
+            lastModified: Date.now(),
+          });
+        } catch (error) {
+          console.warn('WebP conversion failed, keeping original file:', error);
+          return file;
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+      }
+
+      async function handleFileSelect(files) {
+        const selected = Array.from(files || []);
+        const convertedFiles = await Promise.all(selected.map(async (file) => {
+          try {
+            return await convertImageFileToWebp(file);
+          } catch (error) {
+            console.warn('Failed to convert selected file:', error);
+            return file;
+          }
+        }));
+
+        dragDropFiles = convertedFiles;
         
         // Update the actual file input with the selected files
         const fileInput = document.getElementById('file-input');

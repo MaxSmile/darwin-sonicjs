@@ -286,7 +286,7 @@ export function renderDynamicField(field: FieldDefinition, options: FieldRenderO
             autoSlugScript = `
               <script>
                 function generateSlugFromTitle(slugFieldId) {
-                  const titleField = document.querySelector('input[name="title"]');
+                  const titleField = document.querySelector('input[name="title"], input[name="title_en"], input[name="titleEn"], input[name="name"], input[name="heading"]');
                   const slugField = document.getElementById(slugFieldId);
                   if (titleField && slugField) {
                     const slug = titleField.value
@@ -301,7 +301,7 @@ export function renderDynamicField(field: FieldDefinition, options: FieldRenderO
                 
                 // Auto-generate slug when title changes
                 document.addEventListener('DOMContentLoaded', function() {
-                  const titleField = document.querySelector('input[name="title"]');
+                  const titleField = document.querySelector('input[name="title"], input[name="title_en"], input[name="titleEn"], input[name="name"], input[name="heading"]');
                   const slugField = document.getElementById('${fieldId}');
                   if (titleField && slugField && !slugField.value) {
                     titleField.addEventListener('input', function() {
@@ -694,7 +694,7 @@ export function renderDynamicField(field: FieldDefinition, options: FieldRenderO
             if (!isEditMode) {
               // Use setTimeout to ensure all fields in the form are rendered
               setTimeout(() => {
-                const titleField = document.querySelector('input[name="title"]');
+                const titleField = document.querySelector('input[name="title"], input[name="title_en"], input[name="titleEn"], input[name="name"], input[name="heading"]');
                 if (titleField) {
                   titleField.addEventListener('input', function() {
                     if (!manuallyEdited) {
@@ -711,7 +711,7 @@ export function renderDynamicField(field: FieldDefinition, options: FieldRenderO
             
             // Global function for regenerate button
             window.regenerateSlugFromTitle_${fieldId.replace(/-/g, '_')} = function() {
-              const titleField = document.querySelector('input[name="title"]');
+              const titleField = document.querySelector('input[name="title"], input[name="title_en"], input[name="titleEn"], input[name="name"], input[name="heading"]');
               if (titleField && slugField) {
                 const slug = generateSlug(titleField.value);
                 slugField.value = slug;
